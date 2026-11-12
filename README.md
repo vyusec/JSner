@@ -1,15 +1,23 @@
 # JSner - Advanced Endpoint Extractor
 
-**Version 2.0** - Professional endpoint scanner with verification capabilities
+**Version 3.0.1** - Professional endpoint scanner with verification and pscon bridge support
 
 ## 🎯 Overview
 JSner is a powerful Chrome extension that extracts and verifies API endpoints from any website. Built for security researchers, penetration testers, API developers, and web developers who need to discover and test endpoints efficiently.
 
-### ✨ Key Features (v2.0)
+Pair it with the [`pscon` CLI](https://github.com/vyusec/pscon) to turn the live browser session into a structured recon snapshot.
 
-#### Endpoint Verification (NEW in v2.0)
+### ✨ Key Features (v3.0)
+
+#### pscon Bridge (NEW in v3.0)
+- **Local WebSocket bridge** — token-authenticated, loopback-only connection to the `pscon` CLI
+- **Deep Scan** — sends a full page snapshot (HTML, resources, network requests, inline scripts, storage keys) to pscon for deep parsing, crawling, secret detection, and decision-model triage
+- **Authenticated fetch** — pscon can request page resources through the logged-in browser session
+- **Auto-reconnect** — the bridge stays alive across MV3 service-worker suspensions
+
+#### Endpoint Verification (v2.0)
 - **Auto-detected Base URL** - Automatically captures the scanned website's URL
-- **RESTful Method Testing** - Tests all HTTP methods (GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD)
+- **HTTP verification** - Uses GET requests and records real response status codes
 - **Rate Limiting** - Configurable delay (10-1000ms) to prevent server overload
 - **Verification Badges** - Visual indicators showing which endpoints are accessible
 - **Bulk Testing** - Verify all discovered endpoints with one click
@@ -40,10 +48,9 @@ JSner is a powerful Chrome extension that extracts and verifies API endpoints fr
 - **Copy to Clipboard** - Quick copy functionality
 
 #### Modern UI/UX
-- Clean hacker-themed interface with Matrix green aesthetics
-- Gaussian blur background with subtle gradients
-- Rounded corners and frosted glass effects
-- Minimal animations for professional appearance
+- Light and dark interface, auto-detected from the OS with a manual override
+- One restrained design system: sharp radii, visible focus, quiet interactions
+- Accessible contrast (AA) in both grades, reduced-motion support
 - Real-time filtering and search
 - Categorized results (APIs, GraphQL, Config, Other)
 - Statistics dashboard showing counts
@@ -54,7 +61,7 @@ JSner is a powerful Chrome extension that extracts and verifies API endpoints fr
 ### From Source
 1. Download the repository or clone it:
    ```bash
-   git clone https://github.com/ciatech-network/JSner.git
+   git clone https://github.com/vyusec/JSner.git
    ```
 
 2. Open Chrome and navigate to `chrome://extensions/`
@@ -65,6 +72,24 @@ JSner is a powerful Chrome extension that extracts and verifies API endpoints fr
 
 5. The extension will appear in your Chrome toolbar
 
+### Development and packaging
+
+This repository contains the browser extension. The CLI lives separately at
+[vyusec/pscon](https://github.com/vyusec/pscon). For local development, keep
+`JSner/` and `pscon/` as sibling folders, each with its own Git remote.
+
+Load this repository root as an unpacked extension. After editing, reload JSner
+on `chrome://extensions`. No CLI build is required for extension changes.
+
+```bash
+./scripts/install.sh   # show the local folder to load
+./scripts/package.sh   # create dist/JSner-<version>.zip (requires Python 3)
+```
+
+The ZIP contains extension runtime files, icons, the license, and privacy policy.
+Bridge behavior is documented in the CLI repository
+([protocol](https://github.com/vyusec/pscon/blob/main/docs/bridge-protocol.md)).
+
 ### From Chrome Web Store
 Visit [JSner on Chrome Web Store](https://chromewebstore.google.com/detail/JSner/gkmpnokjlhmbhppemigkhcddiiigjmcc)
 
@@ -74,18 +99,24 @@ Visit [JSner on Chrome Web Store](https://chromewebstore.google.com/detail/JSner
 1. Navigate to any website
 2. Click the JSner icon in your Chrome toolbar
 3. Select which file types you want to scan (JS, CSS, JSON, HTML, GraphQL, XML)
-4. Click "SCAN NOW"
+4. Click **Scan page**
 5. Wait for the scan to complete (status will update)
-6. Click "VIEW RESULTS" to see all discovered endpoints in a dedicated tab
+6. Open **Results**, then **View all results** for the full results tab
 
 ### Endpoint Verification (v2.0)
 1. After scanning, the Base URL is auto-detected from the website
 2. Set your desired rate limit (10-1000ms) to control request speed
-3. Click "VERIFY" to test all endpoints with RESTful methods
+3. Click **Verify endpoints** on the **Scan page** tab to check endpoints on the scanned origin using GET
 4. View verification badges in the results page:
    - Green "VERIFIED" badge: Endpoint is accessible
    - Red "FAILED" badge: Endpoint returned an error
    - Gray "PENDING" badge: Not yet verified
+
+### Deep Scan with pscon (v3.0)
+1. Start the pscon bridge: `pscon tui` or `pscon bridge serve`
+2. Get the token: `pscon bridge token`
+3. Open the **pscon** tab in the JSner popup, paste the token, click **Connect**
+4. Click **DEEP SCAN WITH PSCON** — the snapshot is sent to the loopback bridge and a full scan starts automatically in either the TUI or headless bridge
 
 ### Results Management
 - Use the search bar to filter endpoints
@@ -109,7 +140,7 @@ Visit [JSner on Chrome Web Store](https://chromewebstore.google.com/detail/JSner
 - **Rate Limit**: Delay between verification requests (10-1000ms)
   - Lower values (10-50ms): Faster but may trigger rate limiting
   - Higher values (500-1000ms): Slower but safer for production sites
-- **HTTP Methods Tested**: GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD
+- **HTTP method**: GET, with a timeout and a delay between requests
 
 ### Export Formats
 
@@ -211,19 +242,61 @@ We welcome contributions! This project is community-driven. You can:
 
 ## 📄 License
 
-Licensed under the MIT License - see LICENSE file for details
+Licensed under the Mozilla Public License 2.0 - see [LICENSE](LICENSE) for details
 
 ## 🔗 Links
 
-- **Main Repository**: [JSner GitHub](https://github.com/ciatech-network/JSner)
+- **Main Repository**: [JSner GitHub](https://github.com/vyusec/JSner)
 - **Chrome Web Store**: [JSner Extension](https://chromewebstore.google.com/detail/JSner/gkmpnokjlhmbhppemigkhcddiiigjmcc)
-- **Report Issues**: [GitHub Issues](https://github.com/ciatech-network/JSner/issues)
+- **Report Issues**: [GitHub Issues](https://github.com/vyusec/JSner/issues)
 
 ---
 
 **Note**: Firefox support is coming soon!
 
 ## 📋 Changelog
+
+### v3.0.1 (November 2026)
+
+- Compact Scan, Results, and pscon tabs keep the popup within the browser height limit.
+- Connection attempts report authentication failures and replace sockets when credentials change.
+- WebSocket heartbeat keeps the MV3 connection active; scan progress and completion survive reopening the popup.
+- Existing tabs get a snapshot collector on demand after extension installation or reload.
+- Quick scan reads linked JavaScript and stylesheets instead of returning only their URLs.
+- Verification uses safe GET requests with real status codes, timeouts, deduplication, and rate limiting.
+- Fixed result category filters, live storage updates, theme controls, keyboard actions, and narrow layouts.
+
+
+### v3.0.0 (November 2026)
+
+**pscon Bridge:**
+- ✅ Token-authenticated WebSocket bridge to the local pscon CLI (loopback only, default port 8787)
+- ✅ Deep scan snapshot upload: HTML, resources, network requests, inline scripts, storage keys
+- ✅ Authenticated resource fetch forwarding (`/ingest/resource`)
+- ✅ Background service worker with webRequest capture and alarm-based reconnection
+- ✅ Bridge status, connect flow, and scan progress shown in the popup
+
+**Complete UI redesign (light + dark, accessibility-first):**
+- ✅ Shared design tokens (`theme.css`): one color, spacing, type, radius and motion system
+- ✅ Light and dark grades via `prefers-color-scheme` plus a manual override, persisted across the popup and results page
+- ✅ System font stack — the Google Fonts CDN dependency is gone (all processing now really is local)
+- ✅ Rebuilt popup layout: scan options as toggles, stats, verification controls, exports, and a dedicated pscon bridge card with connection pill and progress bar
+- ✅ Rebuilt results page: sticky header, live filter, category chips, verification badges (verified / failed / pending), toast feedback
+- ✅ Accessibility: AA contrast in both grades, visible focus rings, `aria-expanded` result sections, `role="status"` live regions, reduced-motion support
+
+**Scanning Improvements:**
+- ✅ Content scanner rewritten: network hooks (fetch/XHR/WebSocket/SSE/sendBeacon) install at `document_start`
+- ✅ Snapshot collector used by the pscon bridge (`pscon_collect_snapshot`)
+- ✅ Legacy quick-scan and content scanner features unchanged
+
+**Verification & Exports:**
+- ✅ RESTful method testing (GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD) with rate limiting
+- ✅ JSON, CSV, TXT exports and clipboard copy (unchanged behavior)
+
+**Bug Fixes:**
+- ✅ The pscon bridge section is now fully wired (the vendored v3 previously shipped controls that did not render)
+- ✅ Verification results render as badges on every endpoint, including a pending state
+- ✅ Endpoint rows are built with DOM APIs — no more broken rows for endpoints containing quotes or markup characters
 
 ### v2.0.0 (November 2025)
 

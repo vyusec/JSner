@@ -21,7 +21,7 @@ Data Storage
 No data is stored externally or permanently. All processing happens locally on your device. The extracted URLs/Paths are only available during your current session and are discarded once the extension is closed or the page is navigated away from.
 
 ## Data Sharing
-We do not share any data or personally identifiable information with third parties. The extension works entirely within your browser, and no information is sent to any remote servers or external services.
+We do not share any data or personally identifiable information with third parties. The extension works entirely within your browser. When you explicitly pair it with the `pscon` CLI, the snapshot (page HTML, resource URLs, network metadata, inline scripts, and storage key names) is sent to a loopback-only bridge on `127.0.0.1`. It is never sent to a remote server by the extension. Cloud decision-model calls are made by the `pscon` CLI, not by the extension.
 
 ## Permissions
 To provide the features of this extension, we request the following permissions:
@@ -29,7 +29,11 @@ To provide the features of this extension, we request the following permissions:
 activeTab: This allows the extension to interact with the active tab and execute code to extract URLs and paths.
 scripting: This permission allows the extension to inject JavaScript code into the active tab to analyze the content and extract the necessary data.
 tabs: This permission helps the extension identify the active tab so it can perform the required actions.
+storage: Stores the local bridge token and settings.
+webRequest: Observes network request metadata so the pscon snapshot can include requests made before the content script loaded.
+alarms: Keeps the localhost bridge connection alive across MV3 service-worker suspensions.
 Host Permissions (http:/// and https:///): These permissions allow the extension to access resources (e.g., JavaScript files) hosted on any HTTP/HTTPS domain. This is required to fetch and analyze content from external sources linked in the page.
+Localhost host permission (http://127.0.0.1/*): Allows the extension to reach the local pscon bridge only.
 ## Security
 We take your privacy seriously and implement appropriate technical and organizational measures to safeguard your data. However, since all processing is done locally within your browser, the risk of data interception or misuse is minimal.
 

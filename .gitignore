@@ -2,3 +2,8 @@
 *.log
 *.env
 __pycache__/
+
+# Generated packages and local agent tooling
+/dist/
+/.agents/
+/skills-lock.json

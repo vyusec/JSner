@@ -14,6 +14,17 @@ let searchTerm = '';
 document.addEventListener('DOMContentLoaded', () => {
   loadData();
   setupEventListeners();
+  const toggle = document.getElementById('themeToggle');
+  const refreshTheme = () => toggle.setAttribute('aria-label', `Theme: ${document.documentElement.dataset.mode || 'auto'}`);
+  toggle.addEventListener('click', () => { window.jsnerCycleTheme(); refreshTheme(); });
+  document.addEventListener('jsner:theme', refreshTheme);
+  refreshTheme();
+  if (typeof chrome !== 'undefined') chrome.storage?.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.extractedData) {
+      allData = { endpoints: [], apis: [], graphql: [], config: [], other: [], ...changes.extractedData.newValue };
+      updateStats(); renderResults();
+    }
+  });
 });
 
 function setupEventListeners() {
@@ -38,9 +49,16 @@ function setupEventListeners() {
 }
 
 function loadData() {
+  // Results can also be opened outside the extension (a plain tab); degrade softly.
+  if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.local) {
+    updateStats();
+    renderResults();
+    showEmptyState();
+    return;
+  }
   chrome.storage.local.get('extractedData', (data) => {
     if (data.extractedData) {
-      allData = data.extractedData;
+      allData = { ...allData, ...data.extractedData };
       updateStats();
       renderResults();
     } else {
@@ -71,37 +89,43 @@ function renderResults() {
   // Render each category
   if (currentFilter === 'all' || currentFilter === 'endpoints') {
     if (filteredData.endpoints.length > 0) {
-      container.appendChild(createCategorySection('Endpoints', '🌐', filteredData.endpoints, 'endpoints'));
+      container.appendChild(createCategorySection('Endpoints', CATEGORY_ICONS.endpoints, filteredData.endpoints, 'endpoints'));
       hasResults = true;
     }
   }
 
   if (currentFilter === 'all' || currentFilter === 'apis') {
     if (filteredData.apis.length > 0) {
-      container.appendChild(createCategorySection('API Endpoints', '⚡', filteredData.apis, 'apis'));
+      container.appendChild(createCategorySection('API endpoints', CATEGORY_ICONS.apis, filteredData.apis, 'apis'));
       hasResults = true;
     }
   }
 
   if (currentFilter === 'all' || currentFilter === 'graphql') {
     if (filteredData.graphql.length > 0) {
-      container.appendChild(createCategorySection('GraphQL', '🔷', filteredData.graphql, 'graphql'));
+      container.appendChild(createCategorySection('GraphQL', CATEGORY_ICONS.graphql, filteredData.graphql, 'graphql'));
       hasResults = true;
     }
   }
 
   if (currentFilter === 'all' || currentFilter === 'config') {
     if (filteredData.config.length > 0) {
-      container.appendChild(createCategorySection('Configuration', '⚙️', filteredData.config, 'config'));
+      container.appendChild(createCategorySection('Configuration', CATEGORY_ICONS.config, filteredData.config, 'config'));
       hasResults = true;
     }
   }
 
-  if (filteredData.other.length > 0) {
-    container.appendChild(createCategorySection('Other', '📦', filteredData.other, 'other'));
+  if (currentFilter === 'all' && filteredData.other.length > 0) {
+      container.appendChild(createCategorySection('Other', CATEGORY_ICONS.other, filteredData.other, 'other'));
+
     hasResults = true;
   }
 
+  const labels = { all: 'All findings', endpoints: 'Endpoints', apis: 'API endpoints', graphql: 'GraphQL', config: 'Configuration' };
+  document.getElementById('resultsHeading').textContent = labels[currentFilter];
+  const hasData = ['endpoints', 'apis', 'graphql', 'config', 'other'].some(key => allData[key].length);
+  document.getElementById('emptyState').querySelector('h2').textContent = hasData ? 'No matching results' : 'No results yet';
+  document.getElementById('emptyState').querySelector('p').textContent = hasData ? 'Try another search or category.' : 'Scan a website from the JSner popup to see its endpoints here.';
   // Show empty state if no results
   if (!hasResults) {
     emptyState.style.display = 'block';
@@ -139,6 +163,18 @@ function filterData() {
   return filtered;
 }
 
+const CATEGORY_ICONS = {
+  endpoints: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18" /><path d="M12 3c2.5 2.5 3.8 5.6 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.6-3.8-9S9.5 5.5 12 3Z" /></svg>',
+  apis: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4.5 13.5H11L9.5 22 19 10h-6.5L13 2Z" /></svg>',
+  graphql: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 20 19H4L12 4Z" /></svg>',
+  config: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M12 3.5v2.4M12 18.1v2.4M20.5 12h-2.4M5.9 12H3.5M18 6l-1.7 1.7M7.7 16.3 6 18M18 18l-1.7-1.7M7.7 7.7 6 6" /></svg>',
+  other: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" /><path d="m4 7.5 8 4.5 8-4.5M12 12v9" /></svg>'
+};
+
+const COPY_ICON = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a1 1 0 0 1 1-1h10" /></svg>';
+const OPEN_ICON = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 15 19 5" /><path d="M11 5h8v8" /><path d="M19 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5" /></svg>';
+const CHEVRON_ICON = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>';
+
 function createCategorySection(title, icon, items, category) {
   const section = document.createElement('div');
   section.className = 'category-section';
@@ -146,16 +182,41 @@ function createCategorySection(title, icon, items, category) {
 
   const header = document.createElement('div');
   header.className = 'category-header';
-  header.innerHTML = `
-    <div class="category-title">
-      <div class="category-icon">${icon}</div>
-      <span>${title}</span>
-    </div>
-    <div style="display: flex; align-items: center; gap: 16px;">
-      <div class="category-count">${items.length} items</div>
-      <div class="category-toggle">▼</div>
-    </div>
-  `;
+  header.setAttribute('role', 'button');
+  header.setAttribute('tabindex', '0');
+  header.setAttribute('aria-expanded', 'true');
+
+  const headGroup = document.createElement('div');
+  headGroup.className = 'category-head-group';
+
+  const categoryIcon = document.createElement('div');
+  categoryIcon.className = 'category-icon';
+  categoryIcon.innerHTML = CATEGORY_ICONS[category] || CATEGORY_ICONS.other;
+
+  const categoryTitle = document.createElement('span');
+  categoryTitle.className = 'category-title';
+  categoryTitle.textContent = title;
+
+  headGroup.appendChild(categoryIcon);
+  headGroup.appendChild(categoryTitle);
+
+  const headMeta = document.createElement('div');
+  headMeta.className = 'category-head-meta';
+
+  const count = document.createElement('div');
+  count.className = 'category-count';
+  count.textContent = `${items.length} items`;
+
+  const toggle = document.createElement('div');
+  toggle.className = 'category-toggle';
+  toggle.setAttribute('aria-hidden', 'true');
+  toggle.innerHTML = CHEVRON_ICON;
+
+  headMeta.appendChild(count);
+  headMeta.appendChild(toggle);
+
+  header.appendChild(headGroup);
+  header.appendChild(headMeta);
 
   const content = document.createElement('div');
   content.className = 'category-content';
@@ -163,32 +224,72 @@ function createCategorySection(title, icon, items, category) {
   items.forEach(item => {
     const endpointItem = document.createElement('div');
     endpointItem.className = 'endpoint-item';
-    
+
     // Check verification status
-    let verificationBadge = '';
+    let badgeClass = 'pending';
+    let badgeLabel = 'Pending';
     if (allData.verification && allData.verification[item]) {
       const verified = Object.values(allData.verification[item]).some(v => v.accessible);
-      if (verified) {
-        verificationBadge = '<span class="verification-badge verified">✓ VERIFIED</span>';
-      } else {
-        verificationBadge = '<span class="verification-badge failed">✗ FAILED</span>';
-      }
+      badgeClass = verified ? 'verified' : 'failed';
+      badgeLabel = verified ? 'Verified' : 'Failed';
     }
-    
-    endpointItem.innerHTML = `
-      <div class="endpoint-text">${escapeHtml(item)}${verificationBadge}</div>
-      <div class="endpoint-actions">
-        <div class="action-icon" title="Copy" data-action="copy" data-value="${escapeHtml(item)}">📋</div>
-        <div class="action-icon" title="Open" data-action="open" data-value="${escapeHtml(item)}">🔗</div>
-      </div>
-    `;
+
+    const text = document.createElement('div');
+    text.className = 'endpoint-text';
+
+    const value = document.createElement('span');
+    value.textContent = item;
+    text.appendChild(value);
+
+    const badge = document.createElement('span');
+    badge.className = `verification-badge ${badgeClass}`;
+    badge.textContent = badgeLabel;
+    text.appendChild(badge);
+
+    const actions = document.createElement('div');
+    actions.className = 'endpoint-actions';
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'action-icon';
+    copyBtn.type = 'button';
+    copyBtn.title = 'Copy';
+    copyBtn.setAttribute('role', 'button');
+    copyBtn.setAttribute('aria-label', `Copy ${item}`);
+    copyBtn.dataset.action = 'copy';
+    copyBtn.dataset.value = item;
+    copyBtn.innerHTML = COPY_ICON;
+
+    const openBtn = document.createElement('button');
+    openBtn.className = 'action-icon';
+    openBtn.type = 'button';
+    openBtn.title = 'Open';
+    openBtn.setAttribute('role', 'button');
+    openBtn.setAttribute('aria-label', `Open ${item}`);
+    openBtn.dataset.action = 'open';
+    openBtn.dataset.value = item;
+    openBtn.innerHTML = OPEN_ICON;
+
+    actions.appendChild(copyBtn);
+    actions.appendChild(openBtn);
+
+    endpointItem.appendChild(text);
+    endpointItem.appendChild(actions);
     content.appendChild(endpointItem);
   });
 
-  // Toggle functionality
-  header.addEventListener('click', () => {
-    header.classList.toggle('collapsed');
-    content.classList.toggle('hidden');
+  // Toggle functionality (pointer + keyboard)
+  function toggleSection() {
+    const collapsed = content.classList.toggle('hidden');
+    section.classList.toggle('collapsed', collapsed);
+    header.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  }
+
+  header.addEventListener('click', toggleSection);
+  header.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleSection();
+    }
   });
 
   // Action buttons
@@ -197,7 +298,7 @@ function createCategorySection(title, icon, items, category) {
     if (actionIcon) {
       const action = actionIcon.dataset.action;
       const value = actionIcon.dataset.value;
-      
+
       if (action === 'copy') {
         copyToClipboard(value);
       } else if (action === 'open') {
@@ -213,9 +314,9 @@ function createCategorySection(title, icon, items, category) {
 
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text).then(() => {
-    showToast('>> COPIED TO CLIPBOARD');
+    showToast('Copied to clipboard');
   }).catch(() => {
-    showToast('>> ERROR: COPY FAILED', 'error');
+    showToast('Copy failed', 'error');
   });
 }
 
@@ -240,14 +341,14 @@ function openUrl(url) {
           }
           window.open(fullUrl, '_blank');
         } else {
-          showToast('>> ERROR: NO BASE URL SET', 'error');
+          showToast('No base URL set — scan a page first', 'error');
         }
       });
     } else {
-      showToast('>> ERROR: CANNOT OPEN ENDPOINT', 'error');
+      showToast('This endpoint is not linkable', 'error');
     }
   } catch (e) {
-    showToast('>> ERROR: INVALID URL', 'error');
+    showToast('Invalid URL', 'error');
   }
 }
 
@@ -276,7 +377,7 @@ function exportAll() {
   downloadFile(csvContent, 'jsner-results.csv', 'text/csv');
   downloadFile(txtContent, 'jsner-results.txt', 'text/plain');
 
-  showToast('>> EXPORTED ALL FORMATS');
+  showToast('Exported all formats');
 }
 
 function downloadFile(content, filename, mimeType) {
@@ -302,11 +403,5 @@ function showToast(message, type = 'success') {
 function showEmptyState() {
   document.getElementById('emptyState').style.display = 'block';
   document.getElementById('resultsContainer').style.display = 'none';
-}
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
 }
 
