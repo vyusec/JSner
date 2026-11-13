@@ -1,0 +1,76 @@
+name: Run release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Version increment (patch for fixes, minor for features, major for breaking changes)
+        required: true
+        default: patch
+        type: choice
+        options: [patch, minor, major]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-management
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/ci.yml
+
+  prepare:
+    needs: verify
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          # This job alone commits the reviewed release version and tag.
+          persist-credentials: true
+      - name: Resolve the next version
+        id: version
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          version="$(python3 scripts/bump-version.py "$BUMP" --dry-run)"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+      - name: Generate release notes from Git history
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          gh api --method POST "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+            -f tag_name="$RELEASE_TAG" -f target_commitish="$GITHUB_SHA" \
+            --jq .body > /tmp/release-notes.md
+      - name: Commit the version and create the release tag atomically
+        env:
+          BUMP: ${{ inputs.bump }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          python3 scripts/bump-version.py "$BUMP" --notes-file /tmp/release-notes.md
+          python3 scripts/check-release.py --tag "$RELEASE_TAG"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add manifest.json version.txt CHANGELOG.md
+          git commit -m "chore(release): $RELEASE_TAG"
+          git tag -a "$RELEASE_TAG" -m "Release $RELEASE_TAG"
+          git push --atomic origin HEAD:refs/heads/main "refs/tags/$RELEASE_TAG"
+
+  publish:
+    needs: prepare
+    uses: ./.github/workflows/publish.yml
+    with:
+      tag: ${{ needs.prepare.outputs.tag }}
+    secrets: inherit
+    permissions:
+      contents: write

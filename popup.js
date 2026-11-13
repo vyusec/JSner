@@ -15,6 +15,7 @@ const BRIDGE_PORT_DEFAULT = 8787;
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', () => {
+  document.querySelector('.footer-version').textContent = `v${chrome.runtime.getManifest().version}`;
   loadStoredData();
   setupEventListeners();
   setupTheme();

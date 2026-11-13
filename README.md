@@ -1,6 +1,7 @@
 # JSner - Advanced Endpoint Extractor
 
-**Version 3.0.1** - Professional endpoint scanner with verification and pscon bridge support
+Professional endpoint scanner with verification and pscon bridge support.
+See [GitHub Releases](https://github.com/vyusec/JSner/releases) for versioned packages.
 
 ## 🎯 Overview
 JSner is a powerful Chrome extension that extracts and verifies API endpoints from any website. Built for security researchers, penetration testers, API developers, and web developers who need to discover and test endpoints efficiently.
@@ -89,6 +90,14 @@ on `chrome://extensions`. No CLI build is required for extension changes.
 The ZIP contains extension runtime files, icons, the license, and privacy policy.
 Bridge behavior is documented in the CLI repository
 ([protocol](https://github.com/vyusec/pscon/blob/main/docs/bridge-protocol.md)).
+
+### Versioned releases
+
+Use the **Run release** GitHub Actions workflow to choose a patch, minor, or major
+version. It validates and commits the version bump and changelog, tags the source,
+and publishes a GitHub release with the tested extension ZIP and checksum.
+Upload that ZIP to the Chrome Web Store as the final manual step. See
+[Release workflow](docs/releases.md) for setup, retries, and store updates.
 
 ### From Chrome Web Store
 Visit [JSner on Chrome Web Store](https://chromewebstore.google.com/detail/JSner/gkmpnokjlhmbhppemigkhcddiiigjmcc)
