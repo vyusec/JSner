@@ -265,18 +265,20 @@ Licensed under the Mozilla Public License 2.0 - see [LICENSE](LICENSE) for detai
 
 ## 📋 Changelog
 
-### v3.0.1 (November 2026)
-
-- Compact Scan, Results, and pscon tabs keep the popup within the browser height limit.
-- Connection attempts report authentication failures and replace sockets when credentials change.
-- WebSocket heartbeat keeps the MV3 connection active; scan progress and completion survive reopening the popup.
-- Existing tabs get a snapshot collector on demand after extension installation or reload.
-- Quick scan reads linked JavaScript and stylesheets instead of returning only their URLs.
-- Verification uses safe GET requests with real status codes, timeouts, deduplication, and rate limiting.
-- Fixed result category filters, live storage updates, theme controls, keyboard actions, and narrow layouts.
-
-
 ### v3.0.0 (November 2026)
+
+**Popup redesign:**
+- ✅ Fixed-size 400px popup that no longer collapses into a narrow column in Chrome or Firefox
+- ✅ Sliding segmented tabs, layered cards, animated status, progress shimmer, and a numbered pscon pairing guide
+
+**Reliability:**
+- ✅ Compact Scan, Results, and pscon tabs keep the popup within the browser height limit.
+- ✅ Connection attempts report authentication failures and replace sockets when credentials change.
+- ✅ WebSocket heartbeat keeps the MV3 connection active; scan progress and completion survive reopening the popup.
+- ✅ Existing tabs get a snapshot collector on demand after extension installation or reload.
+- ✅ Quick scan reads linked JavaScript and stylesheets instead of returning only their URLs.
+- ✅ Verification uses safe GET requests with real status codes, timeouts, deduplication, and rate limiting.
+- ✅ Fixed result category filters, live storage updates, theme controls, keyboard actions, and narrow layouts.
 
 **pscon Bridge:**
 - ✅ Token-authenticated WebSocket bridge to the local pscon CLI (loopback only, default port 8787)

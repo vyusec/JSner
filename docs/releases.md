@@ -19,7 +19,7 @@ and archive digest. Chrome Web Store submission is a separate final step.
    it for review. Store copies update after approval/publication. An unpacked
    development copy requires a manual reload.
 
-For example, the next patch after `3.0.1` is `3.0.2`:
+For example, the next patch after `3.0.0` is `3.0.1`:
 
 ```bash
 gh workflow run release.yml --repo vyusec/JSner --ref main -f bump=patch
@@ -41,7 +41,7 @@ If publication fails after the tag exists, use Actions → **Publish JSner packa
 → **Run workflow** from `main` and enter the existing tag, or:
 
 ```bash
-gh workflow run publish.yml --repo vyusec/JSner --ref main -f tag=v3.0.2
+gh workflow run publish.yml --repo vyusec/JSner --ref main -f tag=v3.0.1
 ```
 
 Existing assets must match their checksums and are never silently overwritten.

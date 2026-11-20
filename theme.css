@@ -18,11 +18,11 @@
   --s-7: 48px;
   --s-8: 64px;
 
-  /* Radius family: sharp 4/6/8 */
-  --r-btn: 4px;
-  --r-sm: 4px;
-  --r-md: 6px;
-  --r-lg: 8px;
+  /* Radius family: 6/8/10/12 */
+  --r-btn: 8px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 12px;
 
   /* Type scale */
   --t-title: 17px;
@@ -39,6 +39,7 @@
   --m-out: 200ms;
   --m-press: 90ms;
   --m-ease: cubic-bezier(.2, .8, .2, 1);
+  --m-spring: cubic-bezier(.34, 1.36, .64, 1);
 
   /* Light grade. Ink is near-black, never #000. */
   --bg: #f7f7f5;
@@ -61,7 +62,12 @@
   --warn-text: #9a5b06;
   --warn-soft: #fbf1df;
 
+  --panel-top: #ffffff;
+  --highlight: rgba(255, 255, 255, 0.9);
+  --glow: rgba(21, 128, 61, 0.22);
   --shadow-raised: 0 1px 2px rgba(33, 37, 31, 0.06);
+  --shadow-card: 0 1px 0 var(--highlight) inset, 0 1px 2px rgba(33, 37, 31, 0.05), 0 6px 18px -8px rgba(33, 37, 31, 0.14);
+  --shadow-pop: 0 1px 0 var(--highlight) inset, 0 2px 4px rgba(33, 37, 31, 0.06), 0 12px 28px -10px rgba(33, 37, 31, 0.22);
   --ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
 
   color-scheme: light;
@@ -73,8 +79,8 @@
   --inset: #0c0e0d;
   --ink: #e7e9e4;
   --muted: #9ba39b;
-  --hairline: #2a2d29;
-  --hairline-strong: #3b403a;
+  --hairline: #262a26;
+  --hairline-strong: #363b35;
 
   --accent: #22c55e;
   --accent-hover: #34d166;
@@ -88,7 +94,12 @@
   --warn-text: #e6b153;
   --warn-soft: rgba(230, 177, 83, 0.14);
 
+  --panel-top: #1d211d;
+  --highlight: rgba(255, 255, 255, 0.05);
+  --glow: rgba(34, 197, 94, 0.28);
   --shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 1px 0 var(--highlight) inset, 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 24px -12px rgba(0, 0, 0, 0.7);
+  --shadow-pop: 0 1px 0 var(--highlight) inset, 0 2px 6px rgba(0, 0, 0, 0.45), 0 16px 32px -12px rgba(0, 0, 0, 0.8);
   --ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
 
   color-scheme: dark;
@@ -183,13 +194,14 @@ input {
 }
 
 .btn--primary {
-  background: var(--accent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 88%, #fff) 0%, var(--accent) 100%);
   color: var(--on-accent);
-  box-shadow: var(--shadow-raised);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.22) inset, 0 1px 2px rgba(0, 0, 0, 0.18), 0 4px 12px -4px var(--glow);
 }
 
 .btn--primary:hover {
-  background: var(--accent-hover);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent-hover) 85%, #fff) 0%, var(--accent-hover) 100%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 2px 4px rgba(0, 0, 0, 0.18), 0 8px 20px -6px var(--glow);
   transform: translateY(-1px);
 }
 
@@ -198,14 +210,16 @@ input {
 }
 
 .btn--secondary {
-  background: var(--panel);
+  background: linear-gradient(180deg, var(--panel-top), var(--panel));
   border: 1px solid var(--hairline-strong);
   color: var(--ink);
+  box-shadow: 0 1px 0 var(--highlight) inset, 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .btn--secondary:hover {
-  background: var(--inset);
-  border-color: var(--ink);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--hairline-strong));
+  color: var(--ink);
+  box-shadow: 0 1px 0 var(--highlight) inset, 0 4px 12px -6px rgba(0, 0, 0, 0.25);
   transform: translateY(-1px);
 }
 
@@ -214,7 +228,8 @@ input {
 }
 
 .btn:disabled {
-  opacity: 0.45;
+  opacity: 0.42;
+  filter: saturate(0.4);
   cursor: default;
   transform: none !important;
   box-shadow: none;
@@ -283,7 +298,8 @@ input {
   padding: 0 var(--s-3);
   border: 1px solid var(--hairline-strong);
   border-radius: var(--r-sm);
-  background: var(--panel);
+  background: var(--inset);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06) inset;
   color: var(--ink);
   font-size: var(--t-body);
   transition: border-color var(--m-in) var(--m-ease),
@@ -295,12 +311,13 @@ input {
 }
 
 .input:hover {
-  border-color: var(--ink);
+  border-color: color-mix(in srgb, var(--ink) 35%, var(--hairline-strong));
 }
 
 .input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  background: var(--panel);
+  box-shadow: 0 0 0 3px var(--accent-soft), 0 0 14px -4px var(--glow);
   outline: none;
 }
 
@@ -431,10 +448,11 @@ input {
 /* Cards */
 
 .card {
-  background: var(--panel);
+  background: linear-gradient(180deg, var(--panel-top), var(--panel) 60%);
   border: 1px solid var(--hairline);
   border-radius: var(--r-lg);
   padding: var(--s-4);
+  box-shadow: var(--shadow-card);
 }
 
 .card-title {

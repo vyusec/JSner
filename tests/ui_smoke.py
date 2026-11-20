@@ -59,17 +59,19 @@ with ExitStack() as stack:
     assert results.locator('.category-section').count() == 2
     assert results.locator('button.action-icon').count() == 4
     print('PASS live results, category filtering, and keyboard actions')
+    # The popup has a fixed pixel size: viewport units collapse browser action popups.
+    popup.set_viewport_size({'width': 400, 'height': 600})
+    for theme in ['light', 'dark']:
+        popup.evaluate('theme => chrome.storage.local.set({uiTheme:theme})', theme)
+        popup.wait_for_function('theme => document.documentElement.dataset.theme === theme', arg=theme)
+        for panel in ['scan', 'results', 'bridge']:
+            popup.locator('#tab-' + panel).click()
+            bounds = popup.evaluate('() => ({width:document.body.scrollWidth,height:document.body.scrollHeight})')
+            assert bounds['width'] <= 400 and bounds['height'] <= 600, bounds
+            assert popup.evaluate('() => {const p=document.querySelector(".panel-scroll");return p.scrollHeight <= p.clientHeight && p.scrollWidth <= p.clientWidth;}'), panel
+    popup.set_viewport_size({'width': 120, 'height': 200})
+    assert popup.evaluate('() => document.body.getBoundingClientRect().width') == 400, 'popup width must not follow the viewport'
     for width in [480, 320]:
-        popup.set_viewport_size({'width': width, 'height': 600})
-        for theme in ['light', 'dark']:
-            popup.evaluate('theme => chrome.storage.local.set({uiTheme:theme})', theme)
-            popup.wait_for_function('theme => document.documentElement.dataset.theme === theme', arg=theme)
-            for panel in ['scan', 'results', 'bridge']:
-                popup.locator('#tab-' + panel).click()
-                bounds = popup.evaluate('() => ({width:document.body.scrollWidth,height:document.body.scrollHeight})')
-                assert bounds['width'] <= width and bounds['height'] <= 600, bounds
-                if width == 480:
-                    assert popup.evaluate('() => {const p=document.querySelector(".panel-scroll");return p.scrollHeight <= p.clientHeight;}'), panel
         results.set_viewport_size({'width': width, 'height': 600})
         assert results.evaluate('() => document.body.scrollWidth') <= width
     assert not errors, errors

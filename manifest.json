@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "JSner - Endpoint Extractor",
-  "version": "3.0.1",
+  "version": "3.0.0",
   "description": "Advanced endpoint scanner with pscon bridge support. Extract and verify API endpoints, GraphQL queries, and more from any website.",
   "permissions": [
     "scripting",

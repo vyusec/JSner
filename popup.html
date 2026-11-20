@@ -2,7 +2,6 @@
 <html lang="en" data-theme="auto">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JSner — Endpoint Extractor</title>
   <link rel="stylesheet" href="theme.css" />
   <link rel="stylesheet" href="popup.css" />
@@ -12,19 +11,21 @@
   <main class="popup">
     <header class="appbar">
       <div class="brand">
-        <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M3 8V5a2 2 0 0 1 2-2h3" />
-          <path d="M16 3h3a2 2 0 0 1 2 2v3" />
-          <path d="M21 16v3a2 2 0 0 1-2 2h-3" />
-          <path d="M8 21H5a2 2 0 0 1-2-2v-3" />
-          <circle cx="12" cy="12" r="3.5" />
-        </svg>
+        <span class="brand-tile" aria-hidden="true">
+          <svg class="brand-mark" viewBox="0 0 24 24">
+            <path d="M3 8V5a2 2 0 0 1 2-2h3" />
+            <path d="M16 3h3a2 2 0 0 1 2 2v3" />
+            <path d="M21 16v3a2 2 0 0 1-2 2h-3" />
+            <path d="M8 21H5a2 2 0 0 1-2-2v-3" />
+            <circle cx="12" cy="12" r="3.5" />
+          </svg>
+        </span>
         <div class="brand-text">
           <h1 class="brand-name">JSner</h1>
           <span class="brand-sub">Endpoint extractor</span>
         </div>
       </div>
-      <button id="themeToggle" class="icon-btn" type="button" aria-label="Theme: auto" title="Theme: auto">
+      <button id="themeToggle" class="icon-btn icon-btn--framed" type="button" aria-label="Theme: auto" title="Theme: auto">
         <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="12" cy="12" r="9" />
           <path d="M12 3a9 9 0 0 1 0 18Z" fill="currentColor" stroke="none" />
@@ -33,169 +34,166 @@
     </header>
 
     <nav class="mode-tabs" role="tablist" aria-label="Workspace">
-      <button id="tab-scan" class="mode-tab" role="tab" aria-selected="true" aria-controls="panel-scan" type="button">Scan page</button>
-      <button id="tab-results" class="mode-tab" role="tab" aria-selected="false" aria-controls="panel-results" tabindex="-1" type="button">Results <span id="resultsTabCount">0</span></button>
-      <button id="tab-bridge" class="mode-tab" role="tab" aria-selected="false" aria-controls="panel-bridge" tabindex="-1" type="button">pscon <span id="connectionDot" class="bridge-dot" aria-hidden="true"></span></button>
+      <span class="tab-indicator" aria-hidden="true"></span>
+      <button id="tab-scan" class="mode-tab" role="tab" aria-selected="true" aria-controls="panel-scan" type="button">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.2-3.2" /></svg>
+        Scan
+      </button>
+      <button id="tab-results" class="mode-tab" role="tab" aria-selected="false" aria-controls="panel-results" tabindex="-1" type="button">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13" /><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01" /></svg>
+        Results <span id="resultsTabCount" class="tab-count">0</span>
+      </button>
+      <button id="tab-bridge" class="mode-tab" role="tab" aria-selected="false" aria-controls="panel-bridge" tabindex="-1" type="button">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17l6-6-6-6" /><path d="M12 19h8" /></svg>
+        pscon <span id="connectionDot" class="bridge-dot" aria-hidden="true"></span>
+      </button>
     </nav>
+
     <div id="status" class="status status--info" role="status" aria-live="polite">Ready to scan the current website.</div>
+
     <div class="panel-scroll">
-    <div id="panel-scan" class="workspace-panel" role="tabpanel" aria-labelledby="tab-scan">
-
-    <!-- Scan -->
-    <section class="card">
-      <div class="card-head">
-        <h2 class="card-title">Scan options</h2>
-      </div>
-
-      <p class="scan-intro">Find endpoints in the current page and its linked source files.</p>
-      <div class="opt-grid" role="group" aria-label="File types to scan">
-        <label class="opt">
-          <input type="checkbox" id="scanJS" checked />
-          <span class="opt-face">JavaScript</span>
-        </label>
-        <label class="opt">
-          <input type="checkbox" id="scanCSS" checked />
-          <span class="opt-face">CSS</span>
-        </label>
-        <label class="opt">
-          <input type="checkbox" id="scanJSON" checked />
-          <span class="opt-face">JSON</span>
-        </label>
-        <label class="opt">
-          <input type="checkbox" id="scanHTML" checked />
-          <span class="opt-face">HTML</span>
-        </label>
-        <label class="opt">
-          <input type="checkbox" id="scanGraphQL" checked />
-          <span class="opt-face">GraphQL</span>
-        </label>
-        <label class="opt">
-          <input type="checkbox" id="scanXML" />
-          <span class="opt-face">XML / SOAP</span>
-        </label>
-      </div>
-
-      <div class="verify-fields">
-        <div class="field">
-          <label class="field-label" for="baseUrl">Base URL</label>
-          <input type="text" id="baseUrl" class="input input--mono" placeholder="Auto-filled on scan" spellcheck="false" />
-        </div>
-        <div class="field field--rate">
-          <label class="field-label" for="rateLimit">Rate limit</label>
-          <div class="rate-field">
-            <input type="number" id="rateLimit" class="input" value="100" min="10" max="1000" step="10" />
-            <span class="rate-unit">ms / request</span>
+      <!-- Scan -->
+      <section id="panel-scan" class="workspace-panel card" role="tabpanel" aria-labelledby="tab-scan">
+        <div class="card-head">
+          <div>
+            <h2 class="card-title">Scan options</h2>
+            <p class="card-sub">Page source plus linked JS and CSS files.</p>
           </div>
         </div>
-      </div>
 
-      <div class="action-row">
-        <button id="scanButton" class="btn btn--primary btn--grow" type="button">
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.2-3.2" /></svg>
-          Scan page
-        </button>
-        <button id="verifyButton" class="btn btn--secondary" type="button" disabled>
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 12l2 2 4-5" /><path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6l7-3Z" /></svg>
-          Verify endpoints
-        </button>
-      </div>
-    </section>
+        <div class="opt-grid" role="group" aria-label="File types to scan">
+          <label class="opt"><input type="checkbox" id="scanJS" checked /><span class="opt-face">JavaScript</span></label>
+          <label class="opt"><input type="checkbox" id="scanCSS" checked /><span class="opt-face">CSS</span></label>
+          <label class="opt"><input type="checkbox" id="scanJSON" checked /><span class="opt-face">JSON</span></label>
+          <label class="opt"><input type="checkbox" id="scanHTML" checked /><span class="opt-face">HTML</span></label>
+          <label class="opt"><input type="checkbox" id="scanGraphQL" checked /><span class="opt-face">GraphQL</span></label>
+          <label class="opt"><input type="checkbox" id="scanXML" /><span class="opt-face">XML / SOAP</span></label>
+        </div>
 
+        <div class="field-row">
+          <div class="field field--grow">
+            <label class="field-label" for="baseUrl">Base URL</label>
+            <input type="text" id="baseUrl" class="input input--mono" placeholder="Auto-filled on scan" spellcheck="false" />
+          </div>
+          <div class="field field--rate">
+            <label class="field-label" for="rateLimit">Delay</label>
+            <div class="input-affix">
+              <input type="number" id="rateLimit" class="input" value="100" min="10" max="1000" step="10" />
+              <span class="affix">ms</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button id="scanButton" class="btn btn--primary btn--grow" type="button">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.2-3.2" /></svg>
+            Scan page
+          </button>
+          <button id="verifyButton" class="btn btn--secondary" type="button" disabled>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 12l2 2 4-5" /><path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6l7-3Z" /></svg>
+            Verify
+          </button>
+        </div>
+      </section>
+
+      <!-- Results -->
+      <section id="panel-results" class="workspace-panel card" role="tabpanel" aria-labelledby="tab-results" hidden>
+        <div class="card-head">
+          <div>
+            <h2 class="card-title">Results</h2>
+            <p class="card-sub" id="resultsHint">Nothing scanned yet.</p>
+          </div>
+          <button id="clearButton" class="icon-btn icon-btn--danger" type="button" title="Clear results" aria-label="Clear results">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16" /><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /><path d="M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12" /><path d="M10 11v6M14 11v6" /></svg>
+          </button>
+        </div>
+
+        <div class="stat-row" aria-label="Endpoint statistics">
+          <div class="stat stat--total">
+            <span class="stat-label">Total</span>
+            <span class="stat-value" id="totalCount">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">APIs</span>
+            <span class="stat-value" id="apiCount">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">GraphQL</span>
+            <span class="stat-value" id="graphqlCount">0</span>
+          </div>
+        </div>
+
+        <button id="viewResultsBtn" class="btn btn--primary btn--block" type="button" disabled>
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6" /><path d="M20 4l-9 9" /><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg>
+          Open full results
+        </button>
+
+        <div class="export-block">
+          <span class="section-label">Export</span>
+          <div class="export-grid" role="group" aria-label="Export formats">
+            <button id="downloadJSON" class="btn btn--secondary btn--small" type="button" disabled>JSON</button>
+            <button id="downloadCSV" class="btn btn--secondary btn--small" type="button" disabled>CSV</button>
+            <button id="downloadTXT" class="btn btn--secondary btn--small" type="button" disabled>TXT</button>
+            <button id="copyClipboard" class="btn btn--secondary btn--small" type="button" disabled>
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a1 1 0 0 1 1-1h10" /></svg>
+              Copy
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- pscon bridge -->
+      <section id="panel-bridge" class="workspace-panel card card--bridge" role="tabpanel" aria-labelledby="tab-bridge" hidden>
+        <div class="card-head">
+          <div>
+            <h2 class="card-title">pscon bridge</h2>
+            <p class="card-sub bridge-intro">Deep scan using your browser session.</p>
+          </div>
+          <span class="bridge-pill" id="bridgePill">
+            <span class="bridge-dot" aria-hidden="true"></span>
+            <span id="bridgeStatus">Not connected</span>
+          </span>
+        </div>
+
+        <ol class="pairing-steps">
+          <li>Start <code>pscon</code> or <code>pscon bridge serve</code></li>
+          <li>Run <code>pscon bridge token</code>, paste it below</li>
+          <li>Connect on a website tab, then deep scan</li>
+        </ol>
+
+        <div class="field-row">
+          <div class="field field--grow">
+            <label class="field-label" for="bridgeToken">Bridge token</label>
+            <input type="password" id="bridgeToken" class="input input--mono" placeholder="Paste token" autocomplete="off" spellcheck="false" />
+          </div>
+          <div class="field field--port">
+            <label class="field-label" for="bridgePort">Port</label>
+            <input type="number" id="bridgePort" class="input input--mono" value="8787" min="1" max="65535" />
+          </div>
+        </div>
+
+        <div class="bridge-progress" id="bridgeProgress" aria-label="pscon scan progress">
+          <div class="bridge-progress-track" role="progressbar" aria-label="Scan progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="bridge-progress-fill" id="bridgeProgressBar"></div>
+          </div>
+          <span class="bridge-stage" id="bridgeStage">Waiting for pscon</span>
+        </div>
+
+        <div class="action-row">
+          <button id="bridgeConnect" class="btn btn--secondary" type="button">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 15l6-6" /><path d="M11 6l1.5-1.5a4.2 4.2 0 0 1 6 6L17 12" /><path d="M13 18l-1.5 1.5a4.2 4.2 0 0 1-6-6L7 12" /></svg>
+            Connect
+          </button>
+          <button id="deepScanButton" class="btn btn--primary btn--grow" type="button">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3M12 18v3M4.6 7.5l2.6 1.5M16.8 15l2.6 1.5M4.6 16.5l2.6-1.5M16.8 9l2.6-1.5" /><circle cx="12" cy="12" r="3.5" /></svg>
+            Deep scan
+          </button>
+        </div>
+      </section>
     </div>
-    <div id="panel-results" class="workspace-panel" role="tabpanel" aria-labelledby="tab-results" hidden>
-    <!-- Results -->
-    <section class="card">
-      <div class="card-head">
-        <h2 class="card-title">Results</h2>
-        <button id="clearButton" class="icon-btn" type="button" title="Clear results" aria-label="Clear results">
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16" /><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" /><path d="M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12" /><path d="M10 11v6M14 11v6" /></svg>
-        </button>
-      </div>
 
-      <div class="stat-row" aria-label="Endpoint statistics">
-        <div class="stat">
-          <span class="stat-value" id="totalCount">0</span>
-          <span class="stat-label">Total</span>
-        </div>
-        <div class="stat">
-          <span class="stat-value" id="apiCount">0</span>
-          <span class="stat-label">APIs</span>
-        </div>
-        <div class="stat">
-          <span class="stat-value" id="graphqlCount">0</span>
-          <span class="stat-label">GraphQL</span>
-        </div>
-      </div>
-
-      <div class="action-row">
-        <button id="viewResultsBtn" class="btn btn--secondary btn--grow" type="button" disabled>
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13" /><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01" /></svg>
-          View all results
-        </button>
-      </div>
-
-      <div class="export-grid" role="group" aria-label="Export formats">
-        <button id="downloadJSON" class="btn btn--secondary btn--small" type="button" disabled>JSON</button>
-        <button id="downloadCSV" class="btn btn--secondary btn--small" type="button" disabled>CSV</button>
-        <button id="downloadTXT" class="btn btn--secondary btn--small" type="button" disabled>TXT</button>
-        <button id="copyClipboard" class="btn btn--secondary btn--small" type="button" disabled>
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a1 1 0 0 1 1-1h10" /></svg>
-          Copy
-        </button>
-      </div>
-    </section>
-
-    </div>
-    <!-- pscon bridge -->
-    <section id="panel-bridge" class="card card--bridge" role="tabpanel" aria-labelledby="tab-bridge" hidden>
-      <div class="card-head">
-        <h2 class="card-title">pscon bridge</h2>
-        <span class="bridge-pill" id="bridgePill">
-          <span class="bridge-dot" aria-hidden="true"></span>
-          <span id="bridgeStatus">Not connected</span>
-        </span>
-      </div>
-
-      <p class="bridge-intro">Use your browser session for a deeper scan.</p>
-      <ol class="pairing-steps">
-        <li>Start <code>pscon</code> for the interactive console, or <code>pscon bridge serve</code> for headless scans.</li>
-        <li>Run <code>pscon bridge token</code> and paste the token below.</li>
-        <li>Select a website tab, connect, then start a deep scan.</li>
-      </ol>
-
-      <div class="bridge-fields">
-        <div class="field field--token">
-          <label class="field-label" for="bridgeToken">Bridge token</label>
-          <input type="password" id="bridgeToken" class="input input--mono" placeholder="Paste token from pscon" autocomplete="off" spellcheck="false" />
-        </div>
-        <div class="field field--port">
-          <label class="field-label" for="bridgePort">Port</label>
-          <input type="number" id="bridgePort" class="input" value="8787" min="1" max="65535" />
-        </div>
-      </div>
-
-      <div class="bridge-progress" id="bridgeProgress" aria-label="pscon scan progress">
-        <div class="bridge-progress-track" role="progressbar" aria-label="Scan progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-          <div class="bridge-progress-fill" id="bridgeProgressBar"></div>
-        </div>
-        <span class="bridge-stage" id="bridgeStage">Waiting for pscon</span>
-      </div>
-
-      <div class="action-row">
-        <button id="bridgeConnect" class="btn btn--secondary" type="button">
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 6.5l4 4" /><path d="M5 19l2.4-2.4a2 2 0 0 1 2.8 0l3.4-3.4" /><path d="M8 8a4 4 0 1 1 8 0" /></svg>
-          Connect
-        </button>
-        <button id="deepScanButton" class="btn btn--secondary btn--grow" type="button">
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3M12 18v3M4.6 7.5l2.6 1.5M16.8 15l2.6 1.5M4.6 16.5l2.6-1.5M16.8 9l2.6-1.5" /><circle cx="12" cy="12" r="3.5" /></svg>
-          Deep scan with pscon
-        </button>
-      </div>
-    </section>
-
-    </div>
     <footer class="popup-footer">
-      <span>Local scanner · Browser session aware</span>
+      <span class="footer-note"><span class="footer-dot" aria-hidden="true"></span>Runs locally · session aware</span>
       <span class="footer-version" aria-label="Extension version"></span>
     </footer>
   </main>

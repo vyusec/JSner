@@ -72,11 +72,11 @@ async function performScan() {
   const button = document.getElementById('scanButton');
   const original = button.innerHTML;
   button.disabled = true;
-  button.textContent = 'Scanning…';
+  setBusy(button, 'Scanning…');
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id || !/^https?:/.test(tab.url || '')) throw new Error('Select an HTTP or HTTPS website tab to scan');
-    showStatus('Scanning page and linked scripts…', 'info');
+    showStatus('Scanning page and linked scripts…', 'busy');
     const [result] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: runAdvancedScanner, args: [scanOptions()] });
     if (!result?.result) throw new Error('No scan results returned');
     extractedData = result.result;
@@ -269,7 +269,17 @@ async function runAdvancedScanner(options) {
 function updateUI(save = true) {
   const totalCount = ['endpoints', 'graphql', 'apis', 'config', 'other'].reduce((sum, key) => sum + extractedData[key].length, 0);
   document.getElementById('totalCount').textContent = totalCount;
-  document.getElementById('resultsTabCount').textContent = totalCount;
+  const tabCount = document.getElementById('resultsTabCount');
+  if (tabCount.textContent !== String(totalCount)) {
+    tabCount.textContent = totalCount;
+    tabCount.classList.remove('bump');
+    void tabCount.offsetWidth;
+    tabCount.classList.add('bump');
+  }
+  tabCount.classList.toggle('has-data', totalCount > 0);
+  document.getElementById('resultsHint').textContent = totalCount
+    ? `${totalCount} unique finding${totalCount === 1 ? '' : 's'} stored locally.`
+    : 'Nothing scanned yet.';
   document.getElementById('apiCount').textContent = extractedData.apis.length;
   document.getElementById('graphqlCount').textContent = extractedData.graphql.length;
 
@@ -310,7 +320,7 @@ async function verifyEndpoints() {
   button.disabled = true;
   document.getElementById('scanButton').disabled = true;
   document.getElementById('clearButton').disabled = true;
-  button.textContent = 'Verifying…';
+  setBusy(button, 'Verifying…');
   const delay = Math.max(10, Math.min(1000, Number(document.getElementById('rateLimit').value) || 100));
   extractedData.verification ||= {};
   let reachable = 0;
@@ -325,7 +335,7 @@ async function verifyEndpoints() {
       } catch (error) {
         extractedData.verification[endpoint] = { GET: { status: 'error', accessible: false, error: error.message, timestamp: new Date().toISOString() } };
       }
-      showStatus(`Verifying ${index + 1}/${endpoints.length} · ${Math.round((index + 1) / endpoints.length * 100)}%`, 'info');
+      showStatus(`Verifying ${index + 1}/${endpoints.length} · ${Math.round((index + 1) / endpoints.length * 100)}%`, 'busy');
       await new Promise(resolve => setTimeout(resolve, delay));
     }
     await chrome.storage.local.set({ extractedData });
@@ -435,6 +445,13 @@ function copyToClipboard() {
   });
 }
 
+function setBusy(button, label) {
+  const spinner = document.createElement('span');
+  spinner.className = 'spinner';
+  spinner.setAttribute('aria-hidden', 'true');
+  button.replaceChildren(spinner, document.createTextNode(label));
+}
+
 function showStatus(message, type = 'info') {
   const status = document.getElementById('status');
   status.textContent = message;
@@ -443,6 +460,7 @@ function showStatus(message, type = 'info') {
 
 function setupPanels() {
   function select(panel, focus = false) {
+    document.querySelector('.mode-tabs').style.setProperty('--tab-index', ['scan', 'results', 'bridge'].indexOf(panel));
     for (const name of ['scan', 'results', 'bridge']) {
       const tab = document.getElementById(`tab-${name}`);
       const selected = panel === name;
@@ -497,7 +515,7 @@ function setupBridge() {
     if (!Number.isInteger(port) || port < 1 || port > 65535) { showStatus('Port must be between 1 and 65535', 'error'); portInput.focus(); return; }
     connect.disabled = deep.disabled = true;
     const original = button.innerHTML;
-    button.textContent = type === 'pscon_connect' ? 'Connecting…' : 'Sending…';
+    setBusy(button, type === 'pscon_connect' ? 'Connecting…' : 'Sending…');
     chrome.runtime.sendMessage({ type, token, port, options: scanOptions() }, response => {
       const error = chrome.runtime.lastError;
       connect.disabled = deep.disabled = false;
