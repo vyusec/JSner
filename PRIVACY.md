@@ -94,4 +94,4 @@ a new effective date, and significant changes will be noted in the release notes
 ## Contact
 
 Questions about this policy: open an issue at
-<https://github.com/vyusec/JSner/issues> or email **contact@ciatech.net**.
+<https://github.com/vyusec/JSner/issues> or email **security@vyusec.com**.
